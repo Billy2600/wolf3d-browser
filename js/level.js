@@ -193,6 +193,20 @@ Wolf.Level = (function() {
             }
         };
     }
+
+    /**
+     * @description Load JSON data data file file
+     * @private
+     * @param {object} file The filename of json file
+     * @returns {object} json data as javascript object
+     */
+    function loadJson(filename)
+    {
+        var request = new XMLHttpRequest();
+        request.open("GET", filename, false);
+        request.send(null)
+        return JSON.parse(request.responseText);
+    }
     
     /**
      * @description Parse map file data.
@@ -253,11 +267,15 @@ Wolf.Level = (function() {
         level.levelName = level.mapName = F.readString(file, mapNameLength);
         level.music = F.readString(file, musicNameLength);
 
-        level.plane1 = readPlaneData(file, offset[0], length[0], rle);
-        level.plane2 = readPlaneData(file, offset[1], length[1], rle);
-        level.plane3 = readPlaneData(file, offset[2], length[2], rle);
+        // level.plane1 = readPlaneData(file, offset[0], length[0], rle);
+        // level.plane2 = readPlaneData(file, offset[1], length[1], rle);
+        // level.plane3 = readPlaneData(file, offset[2], length[2], rle);
         
-        
+        var mapObj = loadJson("maps/map00.json");
+
+        level.plane1 = mapObj.layers[0].data;
+        level.plane2 = mapObj.layers[1].data;
+        level.plane3 = mapObj.layers[2].data;
         
         // jseidelin: hack disabled since we only use up to map 30
         // HUGE HACK to take out the pushwall maze that occasionally
@@ -290,6 +308,10 @@ Wolf.Level = (function() {
                 level.wallTexY[x][y] = 0;
             }
         }
+
+        // var layer1out = [];
+        // var layer2out = [];
+        // var layer3out = [];
     
    
         for (y0 = 0; y0 < 64; ++y0) {
@@ -299,6 +321,10 @@ Wolf.Level = (function() {
                 layer1 = level.plane1[y0 * 64 + x];
                 layer2 = level.plane2[y0 * 64 + x];
                 layer3 = level.plane3[y0 * 64 + x];
+
+                // layer1out.push(layer1 + ",");
+                // layer2out.push(layer2 + ",");
+                // layer3out.push(layer3 + ",");
 
                 // if server, process obj layer!
                 if (layer2) {
@@ -336,6 +362,10 @@ Wolf.Level = (function() {
                 // End of the map data layer
             }
         }
+
+        // var output = "rle: " + rle + ", width: " + level.width + ", height: " + level.height + ", ceiling: " + level.ceiling + ", floor: " + level.floor + ", length: " + length + ", offset: " + offset;
+        // document.body.innerHTML+="<a id='dl_test' href='data:text;charset=utf-8,"+encodeURIComponent(output)+"'>Your Download</a>";
+        // document.getElementById('dl_test').click();
         
         
         // JDC: try to replace all the unknown areas with an adjacent area, to
