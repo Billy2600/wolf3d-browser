@@ -317,7 +317,7 @@ Wolf.Level = (function() {
                 case 1:
                     planeData = level.plane2;
                     break;
-                case 3:
+                case 2:
                     planeData = level.plane3;
                     break;
                 default:
