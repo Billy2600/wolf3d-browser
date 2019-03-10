@@ -195,7 +195,7 @@ Wolf.Level = (function() {
     }
 
     /**
-     * @description Load JSON data data file file
+     * @description Load JSON data file
      * @private
      * @param {object} file The filename of json file
      * @returns {object} json data as javascript object
@@ -206,6 +206,138 @@ Wolf.Level = (function() {
         request.open("GET", filename, false);
         request.send(null)
         return JSON.parse(request.responseText);
+    }
+
+    /**
+     * @description Convert decimal number to hex
+     * @private
+     * @param {int} number decimal number
+     * @returns {string} number in hexidecimal
+     */
+    function decToHex(number)
+    {
+        if (number < 0)
+        {
+            number = 0xFFFFFFFF + number + 1;
+        }
+
+        return number.toString(16).toUpperCase();
+    }
+
+    /**
+     * @description Export map data to JSON that can be read by Tiled
+     * @private
+     * @param {object} level structure
+     * @returns {object} json data as string
+     */
+    function exportMapJSON(level)
+    {
+        // Build structure
+        var output = {
+            height: level.width,
+            infinite: false,
+            layers: [],
+            nextlayerid: 6,
+            nextobjectid: 2,
+            orientation: "orthogonal",
+            properties: [
+                {
+                    name: "ceilingColor",
+                    type: "color",
+                    value: "#" + decToHex(level.ceiling[0]) + decToHex(level.ceiling[1]) + decToHex(level.ceiling[3])
+                },
+                {
+                    name: "floorColor",
+                    type: "color",
+                    value: "#" + decToHex(level.floor[0]) + decToHex(level.floor[1]) + decToHex(level.floor[3])
+                },
+                {
+                    name: "levelName",
+                    type: "string",
+                    value: level.name
+                },
+                {
+                    name: "music",
+                    type: "string",
+                    value: level.music
+                },
+                {
+                    name: "parTime",
+                    type: "int",
+                    value: level.sParTime
+                }
+            ],
+            renderorder: "right-down",
+            tiledversion: "1.2.2",
+            tileheight: 64,
+            tilesets: [
+                {
+                    columns: 1,
+                    firstgid: 1,
+                    image: "walls.png",
+                    imageheight: 7680,
+                    imagewidth: 64,
+                    margin: 0,
+                    name: "tileset",
+                    spacing: 0,
+                    tilecount: 120,
+                    tileheight: 64,
+                    tilewidth: 64
+                }, 
+                {
+                    columns: 22,
+                    firstgid: 121,
+                    image: "..\/art\/sprites\/128\/objects.png",
+                    imageheight: 64,
+                    imagewidth: 1409,
+                    margin: 0,
+                    name: "objects",
+                    spacing: 0,
+                    tilecount: 22,
+                    tileheight: 64,
+                    tilewidth: 64
+                }
+            ],
+            tilewidth: 64,
+            type: "map",
+            version: 1.2,
+            width: level.width
+        };
+
+        // Add planes
+        for(var i = 0; i < 3; i++)
+        {
+            var planeNo = i + 1;
+            var planeData = [];
+            switch(i)
+            {
+                case 0:
+                    planeData = level.plane1;
+                    break;
+                case 1:
+                    planeData = level.plane2;
+                    break;
+                case 3:
+                    planeData = level.plane3;
+                    break;
+                default:
+                    console.log("Invalid plane # selected: " + i);
+            }
+
+            output.layers.push({
+                data: planeData,
+                height: level.height,
+                name: planeNo.toString(),
+                opacity: 1,
+                type: "tilelayer",
+                visible: true,
+                width: level.width,
+                x: 0,
+                y: 0
+            });
+        }
+
+        return JSON.stringify(output);
     }
     
     /**
@@ -271,7 +403,7 @@ Wolf.Level = (function() {
         // level.plane2 = readPlaneData(file, offset[1], length[1], rle);
         // level.plane3 = readPlaneData(file, offset[2], length[2], rle);
         
-        var mapObj = loadJson("maps/map00.json");
+        var mapObj = loadJson("maps/map01.json");
 
         level.plane1 = mapObj.layers[0].data;
         level.plane2 = mapObj.layers[1].data;
@@ -363,7 +495,8 @@ Wolf.Level = (function() {
             }
         }
 
-        // var output = "rle: " + rle + ", width: " + level.width + ", height: " + level.height + ", ceiling: " + level.ceiling + ", floor: " + level.floor + ", length: " + length + ", offset: " + offset;
+        // var output = exportMapJSON(level);
+        // console.log(output);
         // document.body.innerHTML+="<a id='dl_test' href='data:text;charset=utf-8,"+encodeURIComponent(output)+"'>Your Download</a>";
         // document.getElementById('dl_test').click();
         

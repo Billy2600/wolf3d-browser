@@ -50,6 +50,21 @@
          "name":"floorColor",
          "type":"color",
          "value":"#ff707070"
+        }, 
+        {
+         "name":"levelName",
+         "type":"string",
+         "value":"test"
+        }, 
+        {
+         "name":"music",
+         "type":"string",
+         "value":"test"
+        }, 
+        {
+         "name":"parTime",
+         "type":"int",
+         "value":0
         }],
  "renderorder":"right-down",
  "tiledversion":"1.2.2",
