@@ -30,6 +30,9 @@
  */
 Wolf.Level = (function() {
 
+    var originalMapData = true; // Whether we load from original map data or json
+    var exportMapData = false; // Export map data mode
+
     Wolf.setConsts({
         WALL_TILE           : 1,
         PUSHWALL_TILE       : (1 << 20),
@@ -214,14 +217,23 @@ Wolf.Level = (function() {
      * @param {int} number decimal number
      * @returns {string} number in hexidecimal
      */
-    function decToHex(number)
-    {
+    function decToHex(number) {
         if (number < 0)
         {
             number = 0xFFFFFFFF + number + 1;
         }
 
         return number.toString(16).toUpperCase();
+    }
+
+    /**
+     * @description Convert hex number to decimal
+     * @private
+     * @param {string} number hex number
+     * @returns {int} number in decimal
+     */
+    function hexToDec(number) {
+        return parseInt(number, 16);
     }
 
     /**
@@ -339,21 +351,19 @@ Wolf.Level = (function() {
 
         return JSON.stringify(output);
     }
-    
+
     /**
-     * @description Parse map file data.
+     * @description Parse map original file data.
      * @private
      * @param {object} file The file object
      * @returns {object} The new level object
      */
-    function parseMapData(file) {
+    function parseOriginalData(file) {
         var F = Wolf.File,
             level = newLevel(),
             length, offset,
             mapNameLength,
-            musicNameLength,
-            x, y, y0,
-            layer1, layer2, layer3;
+            musicNameLength;
 
         file.position = 0;
             
@@ -399,17 +409,81 @@ Wolf.Level = (function() {
         level.levelName = level.mapName = F.readString(file, mapNameLength);
         level.music = F.readString(file, musicNameLength);
 
-        // ORIGINAL LOADING
         level.plane1 = readPlaneData(file, offset[0], length[0], rle);
         level.plane2 = readPlaneData(file, offset[1], length[1], rle);
         level.plane3 = readPlaneData(file, offset[2], length[2], rle);
-        
-        // JSON LOADING
-        //var mapObj = loadJson("maps/map01.json");
 
-        // level.plane1 = mapObj.layers[0].data;
-        // level.plane2 = mapObj.layers[1].data;
-        // level.plane3 = mapObj.layers[2].data;
+        return parseMapData(level);
+    }
+
+    /**
+     * @description Return the index of a property in the properties list, as they can be in any order
+     * @private
+     * @param {array} properties the properties list
+     * @param {string} propName name of the property
+     * @returns {int} The index of the property; returns 9999 on error
+     */
+    function findPropertyIndex(properties, propName) {
+        for(var i = 0; i < properties.length; i++) {
+            if(properties[i].name = propName)
+                return i;
+        }
+
+        return 9999;
+    }
+
+    /**
+     * @description Parse map json file data.
+     * @private
+     * @param {object} file The file object
+     * @returns {object} The new level object
+     */
+    function parseJsonData(filename) {
+        level = newLevel();
+
+        // We don't want to use the .map extension, so we can more easily edit the map files
+        var mapObj = loadJson(filename.replace(".map",".json"));
+
+        level.width = mapObj.width;
+        level.height = mapObj.height;
+
+        // Tiled uses hex codes, so we have to convert to remain compatible
+        var idxCeiling = findPropertyIndex(mapObj.properties, "ceilingColor");
+        level.ceiling = [
+            hexToDec(mapObj.properties[idxCeiling].value.substring(1,3)),
+            hexToDec(mapObj.properties[idxCeiling].value.substring(3,5)),
+            hexToDec(mapObj.properties[idxCeiling].value.substring(5,7))
+        ];
+        
+        var idxFloor = findPropertyIndex(mapObj.properties, "floorColor");
+        level.floor = [
+            hexToDec(mapObj.properties[idxFloor].value.substring(1,3)),
+            hexToDec(mapObj.properties[idxFloor].value.substring(3,5)),
+            hexToDec(mapObj.properties[idxFloor].value.substring(5,7))
+        ];
+
+        level.levelName = mapObj.properties[findPropertyIndex(mapObj.properties, "levelName")].value;
+        level.music = mapObj.properties[findPropertyIndex(mapObj.properties, "music")].value;
+
+        level.plane1 = mapObj.layers[0].data;
+        level.plane2 = mapObj.layers[1].data;
+        level.plane3 = mapObj.layers[2].data;
+
+        level.filename = filename; // For reloading
+
+        return parseMapData(level);
+    }
+    
+    /**
+     * @description Parse map file data.
+     * @private
+     * @param {object} level The level object
+     * @returns {object} The new level object
+     */
+    function parseMapData(level) {
+
+        var x, y, y0,
+            layer1, layer2, layer3;
         
         // jseidelin: hack disabled since we only use up to map 30
         // HUGE HACK to take out the pushwall maze that occasionally
@@ -497,10 +571,13 @@ Wolf.Level = (function() {
             }
         }
 
-        var output = exportMapJSON(level);
-        console.log(output);
-        document.body.innerHTML+="<a id='dl_test' href='data:text;charset=utf-8,"+encodeURIComponent(output)+"'>Your Download</a>";
-        document.getElementById('dl_test').click();
+        // Show map data as json in browser
+        if(exportMapData) {
+            var output = exportMapJSON(level);
+            console.log(output);
+            document.body.innerHTML+="<a id='dl_test' href='data:text;charset=utf-8,"+encodeURIComponent(output)+"'>Your Download</a>";
+            document.getElementById('dl_test').click();
+        }
         
         
         // JDC: try to replace all the unknown areas with an adjacent area, to
@@ -665,23 +742,31 @@ Wolf.Level = (function() {
      * @returns {object} The level object.
      */
     function load(filename, callback) {
-        Wolf.File.open(filename, Wolf.MapData, function(error, file) {
-            var level;
-            if (error) {
-                callback(error);
-            }
-            try {
-                level = parseMapData(file);
-            } catch(error) {
-                callback(error);
-                return;
-            }
-            callback(null, level);
-        });
+        if(originalMapData) {
+            Wolf.File.open(filename, Wolf.MapData, function(error, file) {
+                var level;
+                if (error) {
+                    callback(error);
+                }
+                try {
+                    level = parseOriginalData(file);
+                } catch(error) {
+                    callback(error);
+                    return;
+                }
+                callback(null, level);
+            });
+        }
+        else {
+            parseJsonData(filename);
+        }
     }
     
     function reload(level) {
-        return parseMapData(level.file);
+        if(originalMapData)
+            return parseOriginalData(level.file);
+        else
+            return parseJsonData(filename);
     }
 
     

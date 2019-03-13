@@ -357,11 +357,6 @@ Wolf.Renderer = (function() {
             texture = Wolf.Sprites.getTexture(vis.sprite.tex[0]);
             textureSrc = spritePath + texture.sheet;
 
-            if(texture.sheet == "054_102.png")
-            {
-                console.log("Tex[0]:" + vis.sprite.tex[0] + ", Texture num: " + texture.num + ", Texture idx: " + texture.idx + ", Size: " + size);
-            }
-
             if (image._src != textureSrc) {
                 image._src = textureSrc;
                 if (useBackgroundImage) {
