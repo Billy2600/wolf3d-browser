@@ -399,15 +399,17 @@ Wolf.Level = (function() {
         level.levelName = level.mapName = F.readString(file, mapNameLength);
         level.music = F.readString(file, musicNameLength);
 
-        // level.plane1 = readPlaneData(file, offset[0], length[0], rle);
-        // level.plane2 = readPlaneData(file, offset[1], length[1], rle);
-        // level.plane3 = readPlaneData(file, offset[2], length[2], rle);
+        // ORIGINAL LOADING
+        level.plane1 = readPlaneData(file, offset[0], length[0], rle);
+        level.plane2 = readPlaneData(file, offset[1], length[1], rle);
+        level.plane3 = readPlaneData(file, offset[2], length[2], rle);
         
-        var mapObj = loadJson("maps/map01.json");
+        // JSON LOADING
+        //var mapObj = loadJson("maps/map01.json");
 
-        level.plane1 = mapObj.layers[0].data;
-        level.plane2 = mapObj.layers[1].data;
-        level.plane3 = mapObj.layers[2].data;
+        // level.plane1 = mapObj.layers[0].data;
+        // level.plane2 = mapObj.layers[1].data;
+        // level.plane3 = mapObj.layers[2].data;
         
         // jseidelin: hack disabled since we only use up to map 30
         // HUGE HACK to take out the pushwall maze that occasionally
@@ -495,10 +497,10 @@ Wolf.Level = (function() {
             }
         }
 
-        // var output = exportMapJSON(level);
-        // console.log(output);
-        // document.body.innerHTML+="<a id='dl_test' href='data:text;charset=utf-8,"+encodeURIComponent(output)+"'>Your Download</a>";
-        // document.getElementById('dl_test').click();
+        var output = exportMapJSON(level);
+        console.log(output);
+        document.body.innerHTML+="<a id='dl_test' href='data:text;charset=utf-8,"+encodeURIComponent(output)+"'>Your Download</a>";
+        document.getElementById('dl_test').click();
         
         
         // JDC: try to replace all the unknown areas with an adjacent area, to

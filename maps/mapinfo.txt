@@ -1,0 +1,1 @@
+rle: 43981, width: 64, height: 64, ceiling: 56,56,56,0, floor: 112,112,112,0, length: 1434,795,10, offset: 76,1510,2305
