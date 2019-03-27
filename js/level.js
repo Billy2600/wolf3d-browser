@@ -30,7 +30,7 @@
  */
 Wolf.Level = (function() {
 
-    var originalMapData = true; // Whether we load from original map data or json
+    var originalMapData = false; // Whether we load from original map data or json
     var exportMapData = false; // Export map data mode
 
     Wolf.setConsts({
@@ -207,7 +207,7 @@ Wolf.Level = (function() {
     {
         var request = new XMLHttpRequest();
         request.open("GET", filename, false);
-        request.send(null)
+        request.send(null);
         return JSON.parse(request.responseText);
     }
 
@@ -758,7 +758,8 @@ Wolf.Level = (function() {
             });
         }
         else {
-            parseJsonData(filename);
+            level = parseJsonData(filename);
+            callback(null, level);
         }
     }
     
