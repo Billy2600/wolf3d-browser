@@ -780,6 +780,9 @@ Wolf.Level = (function() {
      * @param {number} y The y coordinate.
      */
     function spawnObj(level, type, x, y) {
+        if(!originalMapData)
+            type = type - 61;
+
         if (type >= 23 && type < 23 + statinfo.length) { // static object
             spawnStatic(level, type - 23, x, y);
             return;
@@ -853,6 +856,9 @@ Wolf.Level = (function() {
     function spawnStatic(level, type, x, y) {
         var sprite, pu;
 
+        if(!originalMapData)
+            type = type - 61;
+
         if (statinfo[type].powerup == -1 ) {
             if (statinfo[type].block) {    // blocking static
                 level.tileMap[x][y] |= Wolf.BLOCK_TILE;
@@ -909,6 +915,9 @@ Wolf.Level = (function() {
                 if (!tile) {
                     continue;
                 }
+
+                if(!originalMapData)
+                    tile = tile - 61;
 
                 switch (tile) {
                     // guard
@@ -1170,7 +1179,7 @@ Wolf.Level = (function() {
                         break;
                     case 142:
                         Wolf.Sprites.cacheTextures(Wolf.SPR_UBER_W1, Wolf.SPR_UBER_DEAD);
-                        Wolf.Actors.spawnBoss(level, skill, olf.en_uber, x, y);
+                        Wolf.Actors.spawnBoss(level, skill, Wolf.en_uber, x, y);
                         break;
                     case 143:
                         Wolf.Sprites.cacheTextures(Wolf.SPR_WILL_W1, Wolf.SPR_WILL_DEAD);

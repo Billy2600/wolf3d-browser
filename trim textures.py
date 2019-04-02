@@ -1,6 +1,6 @@
 #This is a python script I wrote to strip out the darker variations of textures
 from PIL import Image
-textures = Image.open('art/walls-shaded/64/walls.png')
+textures = Image.open('art/walls-shaded/64/walls_orig.png')
 width, height = textures.size
 
 result = Image.new('RGB', (width, int(height/2)))
